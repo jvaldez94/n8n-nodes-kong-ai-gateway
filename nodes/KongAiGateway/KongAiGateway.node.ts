@@ -130,7 +130,7 @@ export class KongAiGateway implements INodeType {
   };
 
   // Credential test — registered via testedBy: 'testKongAiGatewayApiCredential'
-  methods = {
+  methods: INodeType['methods'] = {
     credentialTest: {
       async testKongAiGatewayApiCredential(
         this: ICredentialTestFunctions,
