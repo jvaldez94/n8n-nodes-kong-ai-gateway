@@ -20,6 +20,7 @@ export class KongAiGatewayApi implements ICredentialType {
       name: 'authMethod',
       type: 'options',
       default: 'apiKey',
+      required: true,
       options: [
         { name: 'API Key', value: 'apiKey' },
         { name: 'Bearer Token', value: 'bearerToken' },
@@ -33,6 +34,7 @@ export class KongAiGatewayApi implements ICredentialType {
       type: 'string',
       typeOptions: { password: true },
       default: '',
+      required: true,
       displayOptions: { show: { authMethod: ['apiKey'] } },
     },
     {
@@ -50,6 +52,7 @@ export class KongAiGatewayApi implements ICredentialType {
       type: 'string',
       typeOptions: { password: true },
       default: '',
+      required: true,
       displayOptions: { show: { authMethod: ['bearerToken'] } },
     },
     {
@@ -58,6 +61,7 @@ export class KongAiGatewayApi implements ICredentialType {
       type: 'string',
       default: '',
       placeholder: 'X-Kong-Key',
+      required: true,
       displayOptions: { show: { authMethod: ['customHeader'] } },
     },
     {
@@ -66,6 +70,7 @@ export class KongAiGatewayApi implements ICredentialType {
       type: 'string',
       typeOptions: { password: true },
       default: '',
+      required: true,
       displayOptions: { show: { authMethod: ['customHeader'] } },
     },
   ];
