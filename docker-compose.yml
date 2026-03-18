@@ -1,0 +1,18 @@
+services:
+  n8n:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_COMMUNITY_PACKAGES_ENABLED=true
+      - GENERIC_TIMEZONE=UTC
+      # Add any other n8n env vars below (DB, encryption key, etc.)
+      # - N8N_ENCRYPTION_KEY=your-key
+      # - DB_TYPE=postgresdb
+      # - DB_POSTGRESDB_HOST=...
+
+volumes:
+  n8n_data:
