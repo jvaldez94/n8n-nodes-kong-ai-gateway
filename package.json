@@ -1,0 +1,29 @@
+{
+  "name": "n8n-nodes-kong-ai-gateway",
+  "version": "0.1.0",
+  "description": "n8n custom node — Kong AI Gateway as an LLM model provider",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": ["dist/credentials/KongAiGatewayApi.credentials.js"],
+    "nodes": ["dist/nodes/KongAiGateway/KongAiGateway.node.js"]
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*",
+    "@langchain/openai": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "n8n-workflow": "^1.0.0",
+    "@langchain/openai": "^0.3.0"
+  }
+}
