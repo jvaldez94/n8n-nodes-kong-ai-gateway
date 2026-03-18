@@ -214,17 +214,30 @@ export class KongAiGateway implements INodeType {
     switch (authMethod) {
       case 'apiKey': {
         const headerName = ((creds.apiKeyHeader as string | undefined) ?? '').trim() || 'apikey';
-        authHeaders = { [headerName]: creds.apiKey as string };
+        const keyValue = (creds.apiKey as string | undefined)?.trim() ?? '';
+        if (!keyValue) {
+          throw new NodeOperationError(this.getNode(), 'Kong AI Gateway: API Key is required');
+        }
+        authHeaders = { [headerName]: keyValue };
         break;
       }
       case 'bearerToken': {
-        resolvedApiKey = creds.bearerToken as string;
+        const token = (creds.bearerToken as string | undefined)?.trim() ?? '';
+        if (!token) {
+          throw new NodeOperationError(this.getNode(), 'Kong AI Gateway: Bearer Token is required');
+        }
+        resolvedApiKey = token;
         break;
       }
       case 'customHeader': {
-        authHeaders = {
-          [creds.customHeaderName as string]: creds.customHeaderValue as string,
-        };
+        const customName = (creds.customHeaderName as string | undefined)?.trim() ?? '';
+        if (!customName) {
+          throw new NodeOperationError(
+            this.getNode(),
+            'Kong AI Gateway: Custom Header Name is required',
+          );
+        }
+        authHeaders = { [customName]: creds.customHeaderValue as string };
         break;
       }
       // 'none' and default: authHeaders stays {}, resolvedApiKey stays 'kong'
