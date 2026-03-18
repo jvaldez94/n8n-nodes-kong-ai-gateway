@@ -163,11 +163,99 @@ export class KongAiGateway implements INodeType {
     },
   };
 
-  // supplyData stub — implemented in Task 5
   async supplyData(
     this: ISupplyDataFunctions,
-    _itemIndex: number,
+    itemIndex: number,
   ): Promise<SupplyData> {
-    throw new NodeOperationError(this.getNode(), 'supplyData: not yet implemented');
+    // Step 1 — Load credentials
+    const creds = await this.getCredentials('kongAiGatewayApi');
+    const rawBase = creds.baseUrl as string;
+    const authMethod = creds.authMethod as string;
+
+    // Step 2 — Validate baseUrl
+    if (!rawBase || rawBase.trim() === '') {
+      throw new NodeOperationError(
+        this.getNode(),
+        'Kong AI Gateway: baseUrl is required',
+      );
+    }
+    try {
+      const parsed = new URL(rawBase);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error('unsupported protocol');
+      }
+    } catch (_e: unknown) {
+      throw new NodeOperationError(
+        this.getNode(),
+        'Kong AI Gateway: baseUrl must be a valid URL including protocol, e.g. https://kong.example.com',
+      );
+    }
+
+    // Step 3 — Read node parameters
+    const model = this.getNodeParameter('model', itemIndex) as string;
+    const streaming = this.getNodeParameter('streaming', itemIndex) as boolean;
+    const temperature = this.getNodeParameter('temperature', itemIndex) as number;
+    const maxTokensRaw = this.getNodeParameter('maxTokens', itemIndex, '') as number | '';
+    const topPRaw = this.getNodeParameter('topP', itemIndex, '') as number | '';
+    const kongRoutePath = this.getNodeParameter('kongRoutePath', itemIndex, '') as string;
+    const additionalHeadersParam = this.getNodeParameter(
+      'additionalHeaders',
+      itemIndex,
+      {},
+    ) as { headers?: Array<{ name: string; value: string }> };
+
+    // Step 4 — Build authHeaders + resolvedApiKey
+    // bearerToken is passed as ChatOpenAI's apiKey so the SDK generates
+    // "Authorization: Bearer <token>" natively — avoids a header collision.
+    // All other modes use 'kong' as a dummy apiKey (Kong ignores it).
+    let authHeaders: Record<string, string> = {};
+    let resolvedApiKey = 'kong';
+
+    switch (authMethod) {
+      case 'apiKey': {
+        const headerName = ((creds.apiKeyHeader as string | undefined) ?? '').trim() || 'apikey';
+        authHeaders = { [headerName]: creds.apiKey as string };
+        break;
+      }
+      case 'bearerToken': {
+        resolvedApiKey = creds.bearerToken as string;
+        break;
+      }
+      case 'customHeader': {
+        authHeaders = {
+          [creds.customHeaderName as string]: creds.customHeaderValue as string,
+        };
+        break;
+      }
+      // 'none' and default: authHeaders stays {}, resolvedApiKey stays 'kong'
+    }
+
+    // Step 5 — Merge additionalHeaders (extra headers win on key collision)
+    const rawHeaders = additionalHeadersParam.headers ?? [];
+    const extraHeaders = Object.fromEntries(rawHeaders.map(h => [h.name, h.value]));
+    const defaultHeaders: Record<string, string> = { ...authHeaders, ...extraHeaders };
+
+    // Step 6 — Construct baseURL
+    const sanitizedBase = rawBase.replace(/\/$/, '');
+    const routePath = kongRoutePath.trim();
+    const normalizedRoute =
+      routePath && !routePath.startsWith('/') ? `/${routePath}` : routePath;
+    const baseURL = sanitizedBase + normalizedRoute;
+
+    // Step 7 — Instantiate ChatOpenAI and return
+    const instance = new ChatOpenAI({
+      model,
+      streaming,
+      temperature,
+      ...(maxTokensRaw !== '' && { maxTokens: maxTokensRaw as number }),
+      ...(topPRaw !== '' && { topP: topPRaw as number }),
+      apiKey: resolvedApiKey,
+      configuration: {
+        baseURL,
+        defaultHeaders,
+      },
+    });
+
+    return { response: instance };
   }
 }
