@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "files": ["dist"],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs');fs.mkdirSync('dist/nodes/KongAiGateway',{recursive:true});fs.copyFileSync('nodes/KongAiGateway/kong.svg','dist/nodes/KongAiGateway/kong.svg')\"",
     "dev": "tsc --watch"
   },
   "n8n": {
